@@ -33,6 +33,11 @@ init =
     ( Model False [], Cmd.none )
 
 
+boundingBox : ( Float, Float, Float, Float )
+boundingBox =
+    ( 200, 200, 400, 300 )
+
+
 
 -- UPDATE
 
@@ -109,6 +114,15 @@ view model =
                         , join = Smooth
                     }
                 |> move ( -400, 400 )
+
+        renderBoundingBox =
+            let
+                ( x, y, w, h ) =
+                    boundingBox
+            in
+                rect w h
+                    |> outlined defaultLine
+                    |> move ( -400 + w / 2 + x, 400 - h / 2 - y )
     in
         div
             [ style
@@ -121,6 +135,6 @@ view model =
             [ collage
                 800
                 800
-                (List.map toPaths model.paths)
+                (renderBoundingBox :: List.map toPaths model.paths)
                 |> toHtml
             ]
