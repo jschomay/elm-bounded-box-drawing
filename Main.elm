@@ -6,6 +6,7 @@ import Mouse exposing (Position)
 import Collage exposing (..)
 import Element exposing (toHtml)
 import Color exposing (..)
+import Number.Bounded as Bounded exposing (..)
 
 
 main : Program Never Model Msg
@@ -24,7 +25,7 @@ main =
 
 type alias Model =
     { down : Bool
-    , paths : List (List Position)
+    , paths : List (List { x : Bounded Int, y : Bounded Int })
     }
 
 
@@ -36,6 +37,24 @@ init =
 boundingBox : ( Float, Float, Float, Float )
 boundingBox =
     ( 200, 200, 400, 300 )
+
+
+boundedX : Bounded Int
+boundedX =
+    let
+        ( x, y, w, h ) =
+            boundingBox
+    in
+        between (round x) (round x + round w)
+
+
+boundedY : Bounded Int
+boundedY =
+    let
+        ( x, y, w, h ) =
+            boundingBox
+    in
+        between (round y) (round y + round h)
 
 
 
@@ -56,17 +75,17 @@ update msg model =
 updateHelp : Msg -> Model -> Model
 updateHelp msg ({ paths } as model) =
     case msg of
-        DragStart xy ->
-            Model True <| [ xy ] :: paths
+        DragStart { x, y } ->
+            Model True <| [ { x = set x boundedX, y = set y boundedY } ] :: paths
 
-        DragAt xy ->
+        DragAt { x, y } ->
             Model True <|
                 case paths of
                     h :: t ->
-                        (h ++ [ xy ]) :: t
+                        (h ++ [ { x = set x boundedX, y = set y boundedY } ]) :: t
 
                     _ ->
-                        [ [ xy ] ]
+                        [ [ { x = set x boundedX, y = set y boundedX } ] ]
 
         DragEnd _ ->
             Model False paths
@@ -100,8 +119,8 @@ view model =
             path
                 (List.map
                     (\{ x, y } ->
-                        ( toFloat <| x
-                        , toFloat <| -y
+                        ( toFloat <| Bounded.value x
+                        , toFloat <| negate <| Bounded.value y
                         )
                     )
                     positions
